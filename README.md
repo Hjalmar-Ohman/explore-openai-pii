@@ -1,92 +1,115 @@
 # explore-openai-pii
 
-Evaluate OpenAI's `privacy-filter` model: generate synthetic PII data with NVIDIA DataDesigner, fine-tune on it, and compare F1 against the base model.
+Evaluate OpenAI's `openai/privacy-filter` model on synthetic PII data. Generate annotated documents with NVIDIA DataDesigner + Faker, run inference locally or on Modal GPU, and compute span-level F1.
 
 ## Pipeline
 
 ```
-generate_data.py  →  opf train  →  evaluate.py
-     ↓                   ↓              ↓
- data/train.jsonl   finetuned_model  F1 comparison table
+generate_data.py  →  predict.py  →  evaluate.py
+       ↓                  ↓               ↓
+ data/train.jsonl   predictions.jsonl   P/R/F1 table
  data/test.jsonl
+```
+
+Fine-tuning (optional) sits between generate and predict:
+
+```
+opf train data/train.jsonl --output finetuned_model
+python predict.py --model finetuned_model --output data/predictions_finetuned.jsonl
+python evaluate.py --compare data/predictions.jsonl data/predictions_finetuned.jsonl
 ```
 
 ## Setup
 
-**1. Install all dependencies (including the `opf` CLI):**
+**1. Install dependencies:**
 
 ```bash
 pip install -r requirements.txt
-# Verify: opf --help
 ```
 
-**3. Set your API key:**
+**2. Set API keys:**
 
 ```bash
 export OPENAI_API_KEY=sk-...
 ```
 
-## Run the full pipeline
+## Step by step
+
+**Step 1 — generate synthetic data**
 
 ```bash
-bash pipeline.sh
+# Swedish (default), Faker PII, 500 records
+python generate_data.py --num-records 500 --output-dir data/faker/swedish
+
+# English, Faker PII
+python generate_data.py --num-records 500 --language en --output-dir data/faker/english
+
+# Let the LLM generate PII instead of Faker
+python generate_data.py --num-records 500 --generator llm --output-dir data/llm/swedish
 ```
 
-Or step by step:
+Flags:
+- `--language sv|en` — Swedish (default) or English/US PII and documents
+- `--generator faker|llm` — Faker generates PII fields (default, cheaper); `llm` lets DataDesigner do it
+- `--num-records N` — total records before train/test split
+- `--test-split FLOAT` — fraction held out for test (default 0.2)
+- `--output-dir PATH` — where to write `train.jsonl` and `test.jsonl`
+
+**Step 2 — run inference**
+
+Locally (MPS/CPU/CUDA auto-detected):
 
 ```bash
-# Step 1 — generate 500 synthetic records, split 80/20 into data/train.jsonl + data/test.jsonl
-python generate_data.py --num-records 500 --output-dir data/
-
-# Step 2 — fine-tune on training split (saves checkpoint to finetuned_model/)
-opf train data/train.jsonl --output-dir finetuned_model
-
-# Step 3 — base model quick eval via opf CLI
-opf eval data/test.jsonl
-
-# Step 4 — Python F1 comparison: base openai/privacy-filter vs fine-tuned checkpoint
-python evaluate.py
+OPF_MOE_TRITON=0 python predict.py --test-data data/faker/swedish/test.jsonl
+OPF_MOE_TRITON=0 python predict.py --model finetuned_model --output data/predictions_finetuned.jsonl
 ```
 
-## Output
+On Modal (T4 GPU):
 
-`evaluate.py` prints per-label and micro-averaged precision / recall / F1 for both models, then a delta table:
-
+```bash
+modal run modal_predict.py --test-data data/faker/swedish/test.jsonl
 ```
-============================================================
-  Base model: openai/privacy-filter
-============================================================
-Label                     Precision     Recall       F1   Support
-------------------------------------------------------------
-account_number               0.921      0.934    0.927        86 
-private_date                 0.944      0.961    0.952       120
-private_email                0.987      0.993    0.990       118
-...
-OVERALL                      0.953      0.968    0.960       712 *
 
-============================================================
-  Fine-tuned: finetuned_model
-============================================================
-...
+**Step 3 — evaluate**
 
-============================================================
-  Delta (Fine-tuned − Base)
-============================================================
-Label                    ΔPrecision    ΔRecall      ΔF1
-------------------------------------------------------------
-OVERALL                      +0.012     +0.008   +0.010
+```bash
+# Single model
+python evaluate.py --predictions data/predictions.jsonl
+
+# Compare base vs fine-tuned
+python evaluate.py --predictions data/predictions.jsonl \
+                   --compare data/predictions_finetuned.jsonl
+
+# Show per-label errors (FP/FN examples)
+python evaluate.py --predictions data/predictions.jsonl --show-errors private_phone
 ```
+
+**Interactive demo**
+
+```bash
+OPF_MOE_TRITON=0 python demo.py
+```
+
+Highlights detected PII inline, shows confidence scores, and flags near-miss tokens (tokens close to the PII threshold).
 
 ## Data format
 
-Both `train.jsonl` and `test.jsonl` use the privacy-filter span format:
+`train.jsonl` / `test.jsonl` use the OPF span format — `spans` is a dict mapping label → list of `[start, end]` character offsets:
 
 ```json
-{"text": "Alice Smith's email is alice@example.com ...", "spans": [
-  {"start": 0, "end": 11, "label": "private_person"},
-  {"start": 22, "end": 42, "label": "private_email"}
-]}
+{"text": "Alice Smith's email is alice@example.com ...", "spans": {
+  "private_person": [[0, 11]],
+  "private_email":  [[22, 42]]
+}}
 ```
 
-Labels: `private_person`, `private_email`, `private_phone`, `private_address`,
-`private_date`, `account_number`, `private_url`, `secret`.
+`predictions.jsonl` adds `gold_spans` and `predicted_spans` side by side:
+
+```json
+{"text": "...", "gold_spans": {...}, "predicted_spans": {...}}
+```
+
+## Labels
+
+`private_person`, `private_email`, `private_phone`, `private_address`,
+`private_date`, `account_number`, `private_url`

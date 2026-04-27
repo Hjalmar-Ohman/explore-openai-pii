@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -)"
+      "Bash(python3 -)",
+      "Bash(python3 -c \"from data_designer.interface import DataDesigner; help\\(DataDesigner.create\\)\")",
+      "Bash(python3 -c \"import data_designer.config as dd; print\\([x for x in dir\\(dd\\) if not x.startswith\\('_'\\)]\\)\")"
     ]
   }
 }

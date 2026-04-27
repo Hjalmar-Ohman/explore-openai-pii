@@ -7,13 +7,13 @@ Languages: EN + SE`"]
 
     GEN --> DOCS["`**Documents with PII**
 
-train.jsonl  /  test.jsonl`"]
+documents.jsonl`"]
 
     DOCS --> PRED["`**2. Predict Character Spans**
 openai/privacy-filter`"]
 
     PRED --> POUT["`predictions.jsonl
-{text, predicted_spans}`"]
+{document, predicted_spans}`"]
 
     POUT --> EVAL["`**3. Evaluate**
     Match predicted ↔ true character span`"]

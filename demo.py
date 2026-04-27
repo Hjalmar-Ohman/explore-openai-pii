@@ -36,7 +36,6 @@ LABEL_COLORS = {
     "private_date":    "\033[96m",  # cyan
     "private_url":     "\033[34m",  # dark blue
     "account_number":  "\033[91m",  # red
-    "secret":          "\033[31m",  # dark red
 }
 
 # Non-PII tokens whose PII probability exceeds this are shown as near-misses.

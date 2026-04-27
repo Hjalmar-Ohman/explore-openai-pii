@@ -23,6 +23,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
+import pandas as pd
 from pydantic import BaseModel
 
 import data_designer.config as dd
@@ -96,12 +97,6 @@ LANG_CONFIG = {
             "{{ pii_entities }}. "
             "Dokumentet ska vara 120–280 ord och låta naturligt för sin kontext."
         ),
-        "doc_prompt_faker": (
-            "Skriv ett realistiskt dokument av typen '{scenario}' på svenska. "
-            "Använd EXAKT dessa uppgifter ordagrant (kopiera tecken för tecken): "
-            "{entities_dict}. "
-            "Dokumentet ska vara 120–280 ord och låta naturligt för sin kontext."
-        ),
     },
     "en": {
         "scenarios": SCENARIOS_EN,
@@ -119,12 +114,6 @@ LANG_CONFIG = {
             "{{ pii_entities }}. "
             "The document should be 120–280 words and read naturally for its context."
         ),
-        "doc_prompt_faker": (
-            "Write a realistic {scenario} document in English. "
-            "Use EXACTLY these details verbatim (copy them character-for-character): "
-            "{entities_dict}. "
-            "The document should be 120–280 words and read naturally for its context."
-        ),
     },
 }
 
@@ -139,64 +128,42 @@ class PIIEntities(BaseModel):
     personal_url: Optional[str] = None
 
 
-def generate_with_faker(num_records: int, seed: int, language: str) -> list[dict]:
-    """Generate records using Faker/SCB for PII, OpenAI only for document prose."""
-    from openai import OpenAI
+def build_faker_seed_df(num_records: int, language: str, seed: int) -> pd.DataFrame:
     from pii_sampler import sample_pii_entities
 
     cfg = LANG_CONFIG[language]
     random.seed(seed)
-    client = OpenAI()
-    records = []
-
-    for i in range(num_records):
+    rows = []
+    for _ in range(num_records):
         scenario = random.choice(cfg["scenarios"])
         entities = sample_pii_entities(scenario, locale=cfg["faker_locale"])
-        entities_dict = entities.model_dump(exclude_none=True)
-
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[{
-                "role": "user",
-                "content": cfg["doc_prompt_faker"].format(
-                    scenario=scenario,
-                    entities_dict=entities_dict,
-                ),
-            }],
-        )
-        document = response.choices[0].message.content or ""
-
-        spans = find_spans(document, entities_dict)
-        if document.strip() and spans:
-            records.append({"text": document, "spans": spans})
-
-        if (i + 1) % 10 == 0:
-            print(f"  {i + 1}/{num_records} records generated")
-
-    return records
+        rows.append({"scenario": scenario, "pii_entities": entities.model_dump(exclude_none=True)})
+    return pd.DataFrame(rows)
 
 
-def build_config_builder(language: str) -> dd.DataDesignerConfigBuilder:
+def build_config_builder(language: str, seed_df: pd.DataFrame | None = None) -> dd.DataDesignerConfigBuilder:
     cfg = LANG_CONFIG[language]
     model_config = ModelConfig(alias="openai-text", model=MODEL, provider="openai")
     builder = dd.DataDesignerConfigBuilder(model_configs=[model_config])
 
-    builder.add_column(
-        dd.SamplerColumnConfig(
-            name="scenario",
-            sampler_type=dd.SamplerType.CATEGORY,
-            params=dd.CategorySamplerParams(values=cfg["scenarios"]),
+    if seed_df is not None:
+        builder.with_seed_dataset(dd.DataFrameSeedSource(df=seed_df))
+    else:
+        builder.add_column(
+            dd.SamplerColumnConfig(
+                name="scenario",
+                sampler_type=dd.SamplerType.CATEGORY,
+                params=dd.CategorySamplerParams(values=cfg["scenarios"]),
+            )
         )
-    )
-
-    builder.add_column(
-        dd.LLMStructuredColumnConfig(
-            name="pii_entities",
-            model_alias="openai-text",
-            prompt=cfg["pii_prompt"],
-            output_format=PIIEntities,
+        builder.add_column(
+            dd.LLMStructuredColumnConfig(
+                name="pii_entities",
+                model_alias="openai-text",
+                prompt=cfg["pii_prompt"],
+                output_format=PIIEntities,
+            )
         )
-    )
 
     builder.add_column(
         dd.LLMTextColumnConfig(
@@ -226,6 +193,8 @@ def find_spans(text: str, entities: dict) -> dict[str, list[list[int]]]:
 
 
 def df_to_jsonl(df) -> list[dict]:
+    import numpy as np
+
     output = []
     for _, row in df.iterrows():
         text = row.get("document", "")
@@ -238,6 +207,9 @@ def df_to_jsonl(df) -> list[dict]:
                 entities = {}
         elif hasattr(entities, "model_dump"):
             entities = entities.model_dump()
+        elif isinstance(entities, np.ndarray):
+            # DataDesigner returns seed dict columns as array of [key, value] pairs
+            entities = dict(entities.tolist())
 
         if not isinstance(entities, dict):
             entities = {}
@@ -258,8 +230,8 @@ def main() -> None:
     parser.add_argument(
         "--generator",
         choices=["llm", "faker"],
-        default="llm",
-        help="llm: DataDesigner generates PII (default). faker: SCB/Faker generates PII.",
+        default="faker",
+        help="faker: Faker generates PII (default). llm: DataDesigner generates PII.",
     )
     parser.add_argument(
         "--language",
@@ -275,20 +247,19 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.generator == "faker":
-        print(f"Generating {args.num_records} records with Faker/SCB PII ({args.language})...")
-        jsonl_records = generate_with_faker(args.num_records, args.seed, args.language)
-        print(f"Annotated spans on {len(jsonl_records)}/{args.num_records} records")
+        print(f"Generating {args.num_records} Faker PII records ({args.language})...")
+        seed_df = build_faker_seed_df(args.num_records, args.language, args.seed)
+        config_builder = build_config_builder(args.language, seed_df=seed_df)
     else:
-        print(f"Initialising DataDesigner ({args.language})...")
-        designer = DataDesigner()
         config_builder = build_config_builder(args.language)
 
-        print(f"Generating {args.num_records} records (this may take a few minutes)...")
-        result = designer.create(config_builder=config_builder, num_records=args.num_records)
+    print(f"Generating {args.num_records} documents with DataDesigner ({args.language})...")
+    designer = DataDesigner()
+    result = designer.create(config_builder=config_builder, num_records=args.num_records)
 
-        df = result.load_dataset()
-        jsonl_records = df_to_jsonl(df)
-        print(f"Annotated spans on {len(jsonl_records)}/{len(df)} records")
+    df = result.load_dataset()
+    jsonl_records = df_to_jsonl(df)
+    print(f"Annotated spans on {len(jsonl_records)}/{len(df)} records")
 
     random.seed(args.seed)
     random.shuffle(jsonl_records)

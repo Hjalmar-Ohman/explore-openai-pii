@@ -1,0 +1,66 @@
+{
+  "data_designer": {
+    "columns": [
+      {
+        "name": "document",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "llm-text",
+        "skip": null,
+        "propagate_skip": true,
+        "prompt": "Write a realistic {{ scenario }} document in English. Use EXACTLY these details verbatim (copy them character-for-character): {{ pii_entities }}. The document should be 120–280 words and read naturally for its context.",
+        "model_alias": "openai-text",
+        "system_prompt": null,
+        "multi_modal_context": null,
+        "tool_alias": null,
+        "with_trace": "none",
+        "extract_reasoning_content": false
+      },
+      {
+        "name": "scenario",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "seed-dataset",
+        "skip": null,
+        "propagate_skip": true
+      },
+      {
+        "name": "pii_entities",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "seed-dataset",
+        "skip": null,
+        "propagate_skip": true
+      }
+    ],
+    "model_configs": [
+      {
+        "alias": "openai-text",
+        "model": "gpt-5.4-mini",
+        "inference_parameters": {
+          "generation_type": "chat-completion",
+          "max_parallel_requests": 4,
+          "timeout": null,
+          "extra_body": null,
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": null
+        },
+        "provider": "openai",
+        "skip_health_check": false
+      }
+    ],
+    "tool_configs": [],
+    "seed_config": {
+      "source": {
+        "seed_type": "df"
+      },
+      "sampling_strategy": "ordered",
+      "selection_strategy": null
+    },
+    "constraints": null,
+    "profilers": null,
+    "processors": null
+  },
+  "library_version": "0.5.7"
+}
