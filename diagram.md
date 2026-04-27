@@ -1,21 +1,23 @@
 ```mermaid
 flowchart TD
-    GEN["`**1. Dataset Generation**`"]
+    GEN["`**1. Dataset Generation**
 
-    GEN --> NV["NVIDIA DataDesigner"]
-    GEN --> FK["Faker"]
+NVIDIA DataDesigner + Faker
+Languages: EN + SE`"]
 
-    NV --> LANG["Languages: EN + SE"]
-    FK --> LANG
+    GEN --> DOCS["`**Documents with PII**
 
-    LANG --> DOCS["`**Documents with PII**\naccount_numbers · private_address · private_dates\nprivate_emails · private_persons · private_phones · private_urls\n─────────────────────\ntrain.jsonl  /  test.jsonl`"]
+train.jsonl  /  test.jsonl`"]
 
-    DOCS --> PRED["`**2. Predict Character Spans**\n openai/privacy-filter`"]
+    DOCS --> PRED["`**2. Predict Character Spans**
+openai/privacy-filter`"]
 
-    PRED --> POUT["predictions.jsonl\n{text, predicted_spans}"]
+    PRED --> POUT["`predictions.jsonl
+{text, predicted_spans}`"]
 
-    POUT --> EVAL["`**3. Evaluate**`"]
+    POUT --> EVAL["`**3. Evaluate**
+    Match predicted ↔ true character span`"]
     DOCS --> EVAL
 
-    EVAL --> METRICS["Match predicted ↔ true span → TP\nPrecision + Recall + F1"]
+    EVAL --> METRICS["`Precision  ·  Recall  ·  F1`"]
 ```
