@@ -8,14 +8,14 @@ flowchart TD
     NV --> LANG["Languages: EN + SE"]
     FK --> LANG
 
-    LANG --> DOCS["7 Entities\naccount_number · private_address · private_date\nprivate_email · private_person · private_phone · private_url\n─────────────────────\nDocuments with ground-truth character spans\ntrain.jsonl  /  test.jsonl"]
+    LANG --> DOCS["`**Documents with PII**\naccount_numbers · private_address · private_dates\nprivate_emails · private_persons · private_phones · private_urls\n─────────────────────\ntrain.jsonl  /  test.jsonl`"]
 
-    DOCS --> PRED["`**2. Predict Character Spans**\nopenai/privacy-filter`"]
+    DOCS --> PRED["`**2. Predict Character Spans**\n openai/privacy-filter`"]
 
     PRED --> POUT["predictions.jsonl\n{text, predicted_spans}"]
 
     POUT --> EVAL["`**3. Evaluate**`"]
     DOCS --> EVAL
 
-    EVAL --> METRICS["Match predicted ↔ true span  ≥ 80% overlap → TP\nPrecision · Recall · F1  (per-label + micro-avg)"]
+    EVAL --> METRICS["Match predicted ↔ true span → TP\nPrecision + Recall + F1"]
 ```
