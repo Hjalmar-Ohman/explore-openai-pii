@@ -1,0 +1,11 @@
+.env
+.env.*
+*.env
+.git/
+venv/
+__pycache__/
+.vscode/
+.claude/
+data/
+artifacts/
+dataset-metadata.json

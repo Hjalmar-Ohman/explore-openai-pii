@@ -1,0 +1,83 @@
+{
+  "actual_num_records": 10,
+  "buffer_size": 1000,
+  "column_statistics": [
+    {
+      "column_name": "scenario",
+      "column_type": "sampler",
+      "distribution": {
+        "histogram": {
+          "categories": [
+            "apartment rental application",
+            "customer support ticket",
+            "bank account opening form",
+            "hotel reservation",
+            "job application",
+            "insurance claim"
+          ],
+          "counts": [
+            3,
+            2,
+            2,
+            1,
+            1,
+            1
+          ]
+        },
+        "least_common_value": "insurance claim",
+        "most_common_value": "apartment rental application"
+      },
+      "distribution_type": "categorical",
+      "num_null": 0,
+      "num_records": 10,
+      "num_unique": 6,
+      "pyarrow_dtype": "string",
+      "sampler_type": "category",
+      "simple_dtype": "string"
+    },
+    {
+      "column_name": "pii_entities",
+      "column_type": "llm-structured",
+      "input_tokens_mean": 276.9,
+      "input_tokens_median": 277.0,
+      "input_tokens_stddev": 0.7,
+      "num_null": 0,
+      "num_records": 10,
+      "num_unique": 10,
+      "output_tokens_mean": 71.3,
+      "output_tokens_median": 72.0,
+      "output_tokens_stddev": 4.57,
+      "pyarrow_dtype": "struct<account_number: string, address: string, date_of_birth: string, email: string, name: string, phone: string>",
+      "simple_dtype": "dict"
+    },
+    {
+      "column_name": "document",
+      "column_type": "llm-text",
+      "input_tokens_mean": 112.2,
+      "input_tokens_median": 113.0,
+      "input_tokens_stddev": 4.79,
+      "num_null": 0,
+      "num_records": 10,
+      "num_unique": 10,
+      "output_tokens_mean": 228.1,
+      "output_tokens_median": 222.0,
+      "output_tokens_stddev": 29.15,
+      "pyarrow_dtype": "string",
+      "simple_dtype": "string"
+    }
+  ],
+  "dataset_name": "dataset",
+  "file_paths": {
+    "parquet-files": [
+      "parquet-files/batch_00000.parquet"
+    ]
+  },
+  "num_completed_batches": 1,
+  "schema": {
+    "document": "string",
+    "pii_entities": "struct<account_number: string, address: string, date_of_birth: string, email: string, name: string, phone: string>",
+    "scenario": "string"
+  },
+  "target_num_records": 10,
+  "total_num_batches": 1
+}

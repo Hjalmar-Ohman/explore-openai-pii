@@ -1,0 +1,99 @@
+{
+  "actual_num_records": 500,
+  "buffer_size": 1000,
+  "column_statistics": [
+    {
+      "column_name": "scenario",
+      "column_type": "sampler",
+      "distribution": {
+        "histogram": {
+          "categories": [
+            "insurance claim",
+            "VPN access complaint",
+            "online shopping order confirmation",
+            "network security incident report",
+            "job application",
+            "IT helpdesk ticket",
+            "online fraud report",
+            "bank account opening form",
+            "customer support ticket",
+            "hotel reservation",
+            "apartment rental application",
+            "employee onboarding document",
+            "legal deposition excerpt",
+            "medical intake form"
+          ],
+          "counts": [
+            51,
+            42,
+            42,
+            39,
+            38,
+            37,
+            36,
+            36,
+            33,
+            33,
+            31,
+            31,
+            29,
+            22
+          ]
+        },
+        "least_common_value": "medical intake form",
+        "most_common_value": "insurance claim"
+      },
+      "distribution_type": "categorical",
+      "num_null": 0,
+      "num_records": 500,
+      "num_unique": 14,
+      "pyarrow_dtype": "string",
+      "sampler_type": "category",
+      "simple_dtype": "string"
+    },
+    {
+      "column_name": "pii_entities",
+      "column_type": "llm-structured",
+      "input_tokens_mean": 405.13,
+      "input_tokens_median": 405.0,
+      "input_tokens_stddev": 0.77,
+      "num_null": 0,
+      "num_records": 500,
+      "num_unique": 488,
+      "output_tokens_mean": 85.9,
+      "output_tokens_median": 86.0,
+      "output_tokens_stddev": 4.41,
+      "pyarrow_dtype": "struct<account_number: string, address: string, date_of_birth: string, email: string, ip_address: string, name: string, personal_url: string, phone: string>",
+      "simple_dtype": "dict"
+    },
+    {
+      "column_name": "document",
+      "column_type": "llm-text",
+      "input_tokens_mean": 127.02,
+      "input_tokens_median": 128.0,
+      "input_tokens_stddev": 4.49,
+      "num_null": 0,
+      "num_records": 500,
+      "num_unique": 500,
+      "output_tokens_mean": 254.26,
+      "output_tokens_median": 251.0,
+      "output_tokens_stddev": 43.73,
+      "pyarrow_dtype": "string",
+      "simple_dtype": "string"
+    }
+  ],
+  "dataset_name": "dataset",
+  "file_paths": {
+    "parquet-files": [
+      "parquet-files/batch_00000.parquet"
+    ]
+  },
+  "num_completed_batches": 1,
+  "schema": {
+    "document": "string",
+    "pii_entities": "struct<account_number: string, address: string, date_of_birth: string, email: string, ip_address: string, name: string, personal_url: string, phone: string>",
+    "scenario": "string"
+  },
+  "target_num_records": 500,
+  "total_num_batches": 1
+}

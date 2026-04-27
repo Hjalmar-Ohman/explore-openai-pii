@@ -1,0 +1,91 @@
+{
+  "actual_num_records": 500,
+  "buffer_size": 1000,
+  "column_statistics": [
+    {
+      "column_name": "scenario",
+      "column_type": "sampler",
+      "distribution": {
+        "histogram": {
+          "categories": [
+            "job application",
+            "bank account opening form",
+            "medical intake form",
+            "insurance claim",
+            "online shopping order confirmation",
+            "customer support ticket",
+            "apartment rental application",
+            "hotel reservation",
+            "legal deposition excerpt",
+            "employee onboarding document"
+          ],
+          "counts": [
+            59,
+            54,
+            54,
+            51,
+            50,
+            49,
+            48,
+            45,
+            45,
+            45
+          ]
+        },
+        "least_common_value": "employee onboarding document",
+        "most_common_value": "job application"
+      },
+      "distribution_type": "categorical",
+      "num_null": 0,
+      "num_records": 500,
+      "num_unique": 10,
+      "pyarrow_dtype": "string",
+      "sampler_type": "category",
+      "simple_dtype": "string"
+    },
+    {
+      "column_name": "pii_entities",
+      "column_type": "llm-structured",
+      "input_tokens_mean": 395.99,
+      "input_tokens_median": 396.0,
+      "input_tokens_stddev": 0.78,
+      "num_null": 0,
+      "num_records": 500,
+      "num_unique": 495,
+      "output_tokens_mean": 84.74,
+      "output_tokens_median": 84.0,
+      "output_tokens_stddev": 5.3,
+      "pyarrow_dtype": "struct<account_number: string, address: string, date_of_birth: string, email: string, name: string, passport_number: string, personal_url: string, phone: string>",
+      "simple_dtype": "dict"
+    },
+    {
+      "column_name": "document",
+      "column_type": "llm-text",
+      "input_tokens_mean": 125.73,
+      "input_tokens_median": 125.0,
+      "input_tokens_stddev": 5.39,
+      "num_null": 0,
+      "num_records": 500,
+      "num_unique": 500,
+      "output_tokens_mean": 238.62,
+      "output_tokens_median": 234.0,
+      "output_tokens_stddev": 35.12,
+      "pyarrow_dtype": "string",
+      "simple_dtype": "string"
+    }
+  ],
+  "dataset_name": "dataset",
+  "file_paths": {
+    "parquet-files": [
+      "parquet-files/batch_00000.parquet"
+    ]
+  },
+  "num_completed_batches": 1,
+  "schema": {
+    "document": "string",
+    "pii_entities": "struct<account_number: string, address: string, date_of_birth: string, email: string, name: string, passport_number: string, personal_url: string, phone: string>",
+    "scenario": "string"
+  },
+  "target_num_records": 500,
+  "total_num_batches": 1
+}

@@ -1,0 +1,9 @@
+data-designer>=0.1.0
+transformers>=4.40.0
+torch>=2.2.0
+accelerate>=0.27.0
+pydantic>=2.0.0
+seqeval>=1.2.2
+faker>=25.0.0
+openai>=1.0.0
+opf @ git+https://github.com/openai/privacy-filter.git

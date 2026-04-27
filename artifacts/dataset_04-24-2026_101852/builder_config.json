@@ -1,0 +1,131 @@
+{
+  "data_designer": {
+    "columns": [
+      {
+        "name": "scenario",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "sampler",
+        "skip": null,
+        "propagate_skip": true,
+        "sampler_type": "category",
+        "params": {
+          "values": [
+            "medical intake form",
+            "job application",
+            "customer support ticket",
+            "bank account opening form",
+            "insurance claim",
+            "hotel reservation",
+            "legal deposition excerpt",
+            "employee onboarding document",
+            "online shopping order confirmation",
+            "apartment rental application"
+          ],
+          "weights": null,
+          "sampler_type": "category"
+        },
+        "conditional_params": {},
+        "convert_to": null
+      },
+      {
+        "name": "pii_entities",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "llm-structured",
+        "skip": null,
+        "propagate_skip": true,
+        "prompt": "Generate a realistic set of PII for a person in a {{ scenario }}. Return JSON with: name (full name), email, phone (US format with area code), address (full street address with city/state/zip), date_of_birth (MM/DD/YYYY), account_number (8-12 digit number — include only for banking/financial scenarios, otherwise omit).",
+        "model_alias": "openai-text",
+        "system_prompt": null,
+        "multi_modal_context": null,
+        "tool_alias": null,
+        "with_trace": "none",
+        "extract_reasoning_content": false,
+        "output_format": {
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string"
+            },
+            "email": {
+              "title": "Email",
+              "type": "string"
+            },
+            "phone": {
+              "title": "Phone",
+              "type": "string"
+            },
+            "address": {
+              "title": "Address",
+              "type": "string"
+            },
+            "date_of_birth": {
+              "title": "Date Of Birth",
+              "type": "string"
+            },
+            "account_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Account Number"
+            }
+          },
+          "required": [
+            "name",
+            "email",
+            "phone",
+            "address",
+            "date_of_birth"
+          ],
+          "title": "PIIEntities",
+          "type": "object"
+        }
+      },
+      {
+        "name": "document",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "llm-text",
+        "skip": null,
+        "propagate_skip": true,
+        "prompt": "Write a realistic {{ scenario }} document. Use EXACTLY these details verbatim (copy them character-for-character): {{ pii_entities }}. The document should be 120–280 words and read naturally for its context.",
+        "model_alias": "openai-text",
+        "system_prompt": null,
+        "multi_modal_context": null,
+        "tool_alias": null,
+        "with_trace": "none",
+        "extract_reasoning_content": false
+      }
+    ],
+    "model_configs": [
+      {
+        "alias": "openai-text",
+        "model": "gpt-5.4-mini",
+        "inference_parameters": {
+          "generation_type": "chat-completion",
+          "max_parallel_requests": 4,
+          "timeout": null,
+          "extra_body": null,
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": null
+        },
+        "provider": "openai",
+        "skip_health_check": false
+      }
+    ],
+    "tool_configs": [],
+    "seed_config": null,
+    "constraints": null,
+    "profilers": null,
+    "processors": null
+  },
+  "library_version": "0.5.7"
+}

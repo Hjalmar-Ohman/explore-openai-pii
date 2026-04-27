@@ -1,0 +1,153 @@
+{
+  "data_designer": {
+    "columns": [
+      {
+        "name": "scenario",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "sampler",
+        "skip": null,
+        "propagate_skip": true,
+        "sampler_type": "category",
+        "params": {
+          "values": [
+            "medical intake form",
+            "job application",
+            "customer support ticket",
+            "bank account opening form",
+            "insurance claim",
+            "hotel reservation",
+            "legal deposition excerpt",
+            "employee onboarding document",
+            "online shopping order confirmation",
+            "apartment rental application",
+            "network security incident report",
+            "IT helpdesk ticket",
+            "VPN access complaint",
+            "online fraud report",
+            "Swedish tax authority form",
+            "Swedish healthcare referral",
+            "Swedish social services application",
+            "Swedish driver's license renewal",
+            "Swedish unemployment benefit application",
+            "Swedish municipality permit application"
+          ],
+          "weights": null,
+          "sampler_type": "category"
+        },
+        "conditional_params": {},
+        "convert_to": null
+      },
+      {
+        "name": "pii_entities",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "llm-structured",
+        "skip": null,
+        "propagate_skip": true,
+        "prompt": "Generate a realistic set of PII for a Swedish person in a {{ scenario }}. Return JSON with: name (Swedish full name), email, phone (Swedish format, e.g. 070-123 45 67), address (Swedish street address with postal code and city, e.g. Storgatan 12, 413 01 Göteborg), date_of_birth (YYYY-MM-DD), account_number (8-12 digit number — include only for banking/financial scenarios, otherwise omit), personal_url (LinkedIn or personal website URL — include for job applications and onboarding, otherwise omit).",
+        "model_alias": "openai-text",
+        "system_prompt": null,
+        "multi_modal_context": null,
+        "tool_alias": null,
+        "with_trace": "none",
+        "extract_reasoning_content": false,
+        "output_format": {
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string"
+            },
+            "email": {
+              "title": "Email",
+              "type": "string"
+            },
+            "phone": {
+              "title": "Phone",
+              "type": "string"
+            },
+            "address": {
+              "title": "Address",
+              "type": "string"
+            },
+            "date_of_birth": {
+              "title": "Date Of Birth",
+              "type": "string"
+            },
+            "account_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Account Number"
+            },
+            "personal_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Personal Url"
+            }
+          },
+          "required": [
+            "name",
+            "email",
+            "phone",
+            "address",
+            "date_of_birth"
+          ],
+          "title": "PIIEntities",
+          "type": "object"
+        }
+      },
+      {
+        "name": "document",
+        "drop": false,
+        "allow_resize": false,
+        "column_type": "llm-text",
+        "skip": null,
+        "propagate_skip": true,
+        "prompt": "Skriv ett realistiskt dokument av typen '{{ scenario }}' på svenska. Använd EXAKT dessa uppgifter ordagrant (kopiera tecken för tecken): {{ pii_entities }}. Dokumentet ska vara 120–280 ord och låta naturligt för sin kontext.",
+        "model_alias": "openai-text",
+        "system_prompt": null,
+        "multi_modal_context": null,
+        "tool_alias": null,
+        "with_trace": "none",
+        "extract_reasoning_content": false
+      }
+    ],
+    "model_configs": [
+      {
+        "alias": "openai-text",
+        "model": "gpt-5.4-mini",
+        "inference_parameters": {
+          "generation_type": "chat-completion",
+          "max_parallel_requests": 4,
+          "timeout": null,
+          "extra_body": null,
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": null
+        },
+        "provider": "openai",
+        "skip_health_check": false
+      }
+    ],
+    "tool_configs": [],
+    "seed_config": null,
+    "constraints": null,
+    "profilers": null,
+    "processors": null
+  },
+  "library_version": "0.5.7"
+}
